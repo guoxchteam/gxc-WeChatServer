@@ -1,0 +1,259 @@
+buildscript {
+    repositories {
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+		maven { url 'http://repo.springsource.org/plugins-release' }
+    }
+    dependencies {
+        classpath 'io.spring.gradle:propdeps-plugin:0.0.10.RELEASE'
+        classpath 'org.akhikhl.gretty:gretty:2.0.0'
+    }
+}
+
+description = 'Francis WX Server'
+
+allprojects  {
+  group = 'com.ncs.wx'
+  version = '1.0.0-SNAPSHOT'
+
+  ext.commonsCodecVersion = "1.10"
+  ext.commonsCollectionVersion = "4.1"
+  ext.commonsIoVersion = "2.5"
+  ext.dom4jVersion = "1.6.1"
+  ext.httpclientVersion = "4.5.3"
+  ext.jacksonVersion = "2.8.9"
+  ext.jspVersion = "2.3.2-b02"
+  ext.junitVersion = "4.12"
+  ext.logbackVersion = "1.2.3"
+  ext.mockitoVersion = "2.8.47"
+  ext.servletVersion = "3.1.0"
+  ext.slf4jVersion = "1.7.25"
+  ext.springVersion = "4.3.9.RELEASE"
+  ext.springRabbitVersion = "1.7.3.RELEASE"
+  ext.javadocLinks = [
+    "http://docs.oracle.com/javase/8/docs/api/",
+    "http://docs.oracle.com/javaee/7/api/",
+    "http://glassfish.java.net/nonav/docs/v3/api/",
+    "http://docs.jboss.org/jbossas/javadoc/4.0.5/connector/",
+    "http://docs.jboss.org/jbossas/javadoc/7.1.2.Final/",
+    "http://tiles.apache.org/tiles-request/apidocs/",
+    "http://tiles.apache.org/framework/apidocs/",
+    "http://www.eclipse.org/aspectj/doc/released/aspectj5rt-api/",
+    "http://ehcache.org/apidocs/2.10.2",
+    "http://quartz-scheduler.org/api/2.2.1/",
+    "http://fasterxml.github.io/jackson-core/javadoc/2.8/",
+    "http://fasterxml.github.io/jackson-databind/javadoc/2.8/",
+    "http://fasterxml.github.io/jackson-dataformat-xml/javadoc/2.8/",
+    "http://hc.apache.org/httpcomponents-client-ga/httpclient/apidocs/"
+  ] as String[]
+
+  repositories {
+    mavenLocal()
+    
+    maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+
+    flatDir dirs: "${project.rootProject.projectDir}/repo"
+  }
+
+  configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+
+  }
+}
+
+subprojects {
+  
+
+  apply plugin: "java"
+  apply plugin: "propdeps"
+
+  apply from: "${rootProject.projectDir}/gradle/publish-maven.gradle"
+  apply from: "${rootProject.projectDir}/gradle/ide.gradle"
+
+  
+  compileJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.encoding = 'GB18030'
+  }
+
+  compileTestJava {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.encoding = 'GB18030'
+    options.compilerArgs += "-parameters"
+  }
+
+  jar.doFirst {
+    manifest {
+      def manifestFile = "${projectDir}/src/main/resources/META-INF/MANIFEST.MF"      
+      if ( new File( manifestFile ).exists() ) {
+        from ( manifestFile )
+      }
+      attributes["Created-By"] =
+        "${System.getProperty("java.version")} (${System.getProperty("java.specification.vendor")})"
+      attributes["Specification-Title"] = project.name
+      attributes["Specification-Version"] = project.version
+      attributes["Specification-Vendor"] = 'Beijing New Century Software Co.,Ltd'
+      attributes["Implementation-Title"] = project.name
+      attributes["Implementation-Version"] = project.version
+    }
+  }
+
+  javadoc {
+    options {
+      encoding = "GB18030"
+      charSet = "UTF-8"
+      docEncoding = "UTF-8"
+      locale = "zh"      
+      links = rootProject.ext.javadocLinks
+    }
+    options.addBooleanOption('Xdoclint:none', true)
+
+    // suppress warnings due to cross-module @see and @link references;
+    // note that global 'api' task does display all warnings.
+    logging.captureStandardError LogLevel.INFO
+    logging.captureStandardOutput LogLevel.INFO // suppress "## warnings" message
+  }
+
+  task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+    // don't include or exclude anything explicitly by default. See SPR-12085.
+  }
+
+  task javadocJar(type: Jar) {
+    classifier = "javadoc"
+    from javadoc
+  }
+
+  artifacts {
+    if(project.version.endsWith('-SNAPSHOT')) {        
+      archives sourcesJar
+    } else {
+      archives sourcesJar
+      archives javadocJar
+    }
+  }
+
+  configurations.all {
+    exclude group: "commons-logging", module: "commons-logging"
+  }
+
+}
+
+project("apollo-wx-api") {
+  description = "Apollo WeChat Server API"
+  dependencies {
+  }
+}
+
+project("apollo-wx-impl") {
+  description = 'Apollo WeChat Server Impl'
+  
+  dependencies {
+    compile project(':apollo-wx-api')
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+    compile("commons-io:commons-io:${commonsIoVersion}")
+    compile("commons-codec:commons-codec:${commonsCodecVersion}")
+    compile("dom4j:dom4j:${dom4jVersion}") {
+      exclude group: "xml-apis", module: "xml-apis"
+	}
+    compile("org.apache.httpcomponents:httpclient:${httpclientVersion}") {
+      exclude(module: 'commons-logging')
+    }
+	compile("org.springframework.amqp:spring-rabbit:${springRabbitVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    compile("org.springframework:spring-web:${springVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    compile("org.springframework:spring-webmvc:${springVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    compile("mysql:mysql-connector-java:5.1.39")
+    compile("org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final")
+    compile("org.springframework.data:spring-data-jpa:1.10.3.RELEASE")
+    compile("org.hibernate:hibernate-entitymanager:5.2.2.Final")
+    compile("org.hibernate:hibernate-c3p0:5.2.2.Final")
+    compile("org.hibernate:hibernate-ehcache:5.2.2.Final")
+    
+    compile("org.slf4j:jcl-over-slf4j:${slf4jVersion}")
+    compile("org.slf4j:slf4j-api:${slf4jVersion}")
+    provided("javax.servlet:javax.servlet-api:${servletVersion}")
+    testCompile("ch.qos.logback:logback-classic:${logbackVersion}") 
+    testCompile("junit:junit:${junitVersion}")
+    testCompile("org.springframework:spring-test:${springVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    testRuntime("org.springframework:spring-context:${springVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+  }
+
+}
+
+project("apollo-wx-webapp") {
+  description = 'Apollo WeChat Server Webapp'
+  
+  apply plugin: 'war'
+  apply plugin: 'org.akhikhl.gretty'
+
+  dependencies {
+    compile project(':apollo-wx-impl')
+	
+    runtime("ch.qos.logback:logback-classic:${logbackVersion}") 
+	runtime("org.springframework.amqp:spring-rabbit:${springRabbitVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    provided("javax.servlet:javax.servlet-api:${servletVersion}")
+    provided("javax.servlet.jsp:javax.servlet.jsp-api:${jspVersion}")
+    provided("javax.servlet.jsp.jstl:javax.servlet.jsp.jstl-api:1.2.1")
+    provided("org.apache.taglibs:taglibs-standard-jstlel:1.2.1") {
+      exclude group: "org.apache.taglibs", module: "taglibs-standard-spec"
+    }
+    
+    testCompile("junit:junit:${junitVersion}")
+    testCompile("org.springframework:spring-test:${springVersion}") {
+      exclude group: "commons-logging", module: "commons-logging"
+    }
+    
+    gretty("org.apache.tomcat:tomcat-jdbc:8.5.5")
+    gretty("mysql:mysql-connector-java:5.1.39")
+    gretty("com.zaxxer:HikariCP:2.4.6")
+    gretty("org.hibernate:hibernate-c3p0:5.2.2.Final")
+	gretty("org.apache.taglibs:taglibs-standard-spec:1.2.5")
+    gretty("org.apache.taglibs:taglibs-standard-impl:1.2.5")
+	
+  }
+
+  war {
+    classpath = classpath.filter { file ->
+      //println file.name
+      (
+          !file.name.startsWith('javax.servlet-api') &&
+          !file.name.startsWith('javax.websocket-api') &&
+          !file.name.startsWith('javax.servlet.jsp-api') &&
+          !file.name.startsWith('javax.servlet.jsp.jstl-api') &&
+          !file.name.startsWith('taglibs-standard-impl') &&
+          !file.name.startsWith('taglibs-standard-jstlel') &&
+          !file.name.startsWith('slf4j-nop') &&
+          !file.name.startsWith('slf4j-api') &&
+          !file.name.startsWith('jcl-over-slf4j') 
+      )
+    }
+  }
+
+  gretty {
+    httpPort = 8500
+    contextPath = "/wx"
+    contextConfigFile = "context.xml"
+    logbackConfigFile = "${projectDir}/src/main/config/logback.xml"
+    classPath = ["${projectDir}/src/main/config"]
+    servletContainer = "jetty9.4"
+    jvmArgs = ["-Dorg.eclipse.jetty.annotations.maxWait=120"]
+  	//scanInterval=0
+  }
+
+}
+

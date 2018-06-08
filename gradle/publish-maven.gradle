@@ -1,0 +1,45 @@
+apply plugin: "propdeps-maven"
+
+
+install {
+  repositories.mavenInstaller {
+    customizePom(pom, project)
+  }	
+}
+
+uploadArchives {
+  repositories.mavenDeployer {
+    customizePom(pom, project)
+  }	
+}
+
+
+def customizePom(pom, gradleProject) {
+  pom.whenConfigured { generatedPom ->
+    // eliminate test-scoped dependencies (no need in maven central poms)
+	generatedPom.dependencies.removeAll { dep ->
+	  dep.scope == "test"
+	}
+    
+    generatedPom.dependencies.findAll{ it.scope == "optional" }.each {
+      //println it.group + ':' + it.artifactId 
+	  it.scope = "compile"
+	  it.optional = true
+	}
+
+	// sort to make pom dependencies order consistent to ease comparison of older poms
+	generatedPom.dependencies = generatedPom.dependencies.sort { dep ->
+	  "$dep.scope:$dep.optional:$dep.groupId:$dep.artifactId"
+	}
+
+	// add all items necessary for maven central publication
+	generatedPom.project {
+	  name = gradleProject.description
+		description = gradleProject.description
+		organization {
+	      name = "Beijing New Century Software Co.,Ltd"
+		  url = "http://www.newcensoft.com.cn"
+		}
+	  }
+	}
+}

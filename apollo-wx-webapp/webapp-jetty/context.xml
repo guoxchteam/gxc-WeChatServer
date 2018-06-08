@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+<Configure id='wac' class="org.eclipse.jetty.webapp.WebAppContext"> 
+    <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.webapp.WebInfIncludeJarPattern</Arg>
+        <!--
+        <Arg>.*/spring-[^/]*\.jar$</Arg>
+        -->
+        <Arg>.*/((apollo)|(bpm))-[^/]*\.jar$|.*/classes/.*|.*/.*taglibs-[^/]*\.jar$</Arg>
+    </Call>
+</Configure> 

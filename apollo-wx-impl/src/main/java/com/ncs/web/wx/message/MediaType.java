@@ -1,0 +1,41 @@
+package com.ncs.web.wx.message;
+
+/**
+ *
+ * Àÿ≤ƒ¿‡–Õ
+ *
+ * @author qsyang
+ */
+public enum MediaType {
+
+    /**
+     * Õº∆¨
+     */
+    Image("image"),
+    /**
+     * ”Ô“Ù
+     */
+    Voice("voice"),
+    /**
+     *  ”∆µ
+     */
+    Video("video"),
+    /**
+     * Àı¬‘Õº
+     */
+    Thumb("thumb");
+
+    private String value = "";
+
+    MediaType(String value) {
+        this.value = value;
+    }
+
+    /**
+     * @return the msgType
+     */
+    @Override
+    public String toString() {
+        return value;
+    }
+}

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:util="http://www.springframework.org/schema/util" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/util 
+    http://www.springframework.org/schema/util/spring-util.xsd
+    http://www.springframework.org/schema/rabbit
+    http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+
+  <bean id="apollo-wx-service" class="com.ncs.web.wx.service.WxServiceImpl">
+    <property name="token" value="${wx.token}" />
+    <property name="appId" value="${wx.appid}" />
+    <property name="appSecret" value="${wx.appsecret}" />
+  </bean>
+
+  <bean id="apollo-wx-handler-factory" class="com.ncs.web.wx.service.MessageHandlerFactoryImpl">
+    <property name="subscribeEventHandler" ref="apollo-wx-subscribe-handler" />
+    <property name="textMessageHandler" ref="apollo-wx-test-handler" />
+    <property name="imageMessageHandler" ref="apollo-wx-image-handler" />
+    <property name="voiceMessageHandler" ref="apollo-wx-voice-handler" />
+    <property name="locationMessageHandler" ref="apollo-wx-location-handler" />
+  </bean>
+
+  <bean id="apollo-wx-subscribe-handler" class="com.ncs.web.wx.handler.SubscribleEventHandler">
+    <property name="welcomeContent">
+      <value><![CDATA[谢谢关注我的公众号!]]></value>
+    </property>
+  </bean>
+  <bean id="apollo-wx-test-handler" class="com.ncs.web.wx.handler.TestMessageHandler" />
+  <bean id="apollo-wx-image-handler" class="com.ncs.web.wx.handler.ImageMessageHandler" />
+  <bean id="apollo-wx-voice-handler" class="com.ncs.web.wx.handler.VoiceMessageHandler" />
+  <bean id="apollo-wx-location-handler" class="com.ncs.web.wx.handler.LocationMessageHandler" />
+  
+  <!-- 使用rabbit mq 
+  <rabbit:connection-factory id="connectionFactory" host="${com.ncs.index.mq.host}" port="${com.ncs.index.mq.port}"
+    username="${com.ncs.index.mq.username}" password="${com.ncs.index.mq.password}" />
+
+  <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
+
+  <rabbit:admin connection-factory="connectionFactory" />
+
+  <rabbit:queue name="${wexin.msg.queue}" />
+
+  <rabbit:listener-container connection-factory="connectionFactory">
+    <rabbit:listener queues="${wexin.msg.queue}" ref="apollo-wx-message-listener" />
+  </rabbit:listener-container>
+  
+  <bean id="apollo-wx-message-listener" class="org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter">
+    <constructor-arg>
+      <bean class="com.ncs.web.wx.mq.MqTaskListenerImpl">
+      	<property name="wxService" ref="apollo-wx-service"/>
+      </bean>
+    </constructor-arg>
+  </bean> -->
+  
+</beans>
+

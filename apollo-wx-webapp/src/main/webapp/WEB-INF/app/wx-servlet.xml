@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd  
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 缺省jsp显示控制器 -->
+  <bean id="wechatController" class="com.ncs.web.wx.mvc.WechatController">
+    <property name="wxService" ref="apollo-wx-service" />
+    <property name="handlerFactory" ref="apollo-wx-handler-factory"/>
+  </bean>
+
+
+	<!-- no 'id' required, HandlerMapping beans are automatically detected by 
+		the DispatcherServlet -->
+  <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    <property name="alwaysUseFullPath" value="false" />
+    <property name="mappings">
+      <props>
+        <prop key="/api">wechatController</prop>
+      </props>
+    </property>
+  </bean>
+</beans>
