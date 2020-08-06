@@ -12,7 +12,7 @@ buildscript {
 description = 'Francis WX Server'
 
 allprojects  {
-  group = 'com.ncs.wx'
+  group = 'com.francis.wxserver'
   version = '1.0.0-SNAPSHOT'
 
   ext.commonsCodecVersion = "1.10"
